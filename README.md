@@ -1,7 +1,6 @@
-[![GoDoc](https://godoc.org/github.com/jsipprell/keyctl?status.svg)](https://godoc.org/github.com/jsipprell/keyctl)
-[![Build Status](https://travis-ci.org/jsipprell/keyctl.svg?branch=master)](https://travis-ci.org/jsipprell/keyctl)
+[![GoDoc](https://godoc.org/github.com/dpeckett/keyutils?status.svg)](https://godoc.org/github.com/dpeckett/keyutils)
 
-# keyctl
+# keyutils
 
 A native Go API for the security key management system (aka "keyrings") found in Linux 2.6+
 
@@ -21,11 +20,11 @@ package main
    
 import (
   "log"
-  "github.com/jsipprell/keyctl"
+  "github.com/dpeckett/keyutils"
 )
     
 func main() {
-  keyring, err := keyctl.SessionKeyring()
+  keyring, err := keyutils.SessionKeyring()
   if err != nil {
     log.Fatal(err)
   }
@@ -48,11 +47,11 @@ package main
 
 import (
   "log"
-  "github.com/jsipprell/keyctl"
+  "github.com/dpeckett/keyutils"
 )
 
 func main() {
-  keyring, err := keyctl.SessionKeyring()
+  keyring, err := keyutils.SessionKeyring()
   if err != nil {
     log.Fatal(err)
   }

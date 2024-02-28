@@ -161,7 +161,9 @@ func CreateKeyring(parent Keyring, name string) (NamedKeyring, error) {
 	}
 
 	if ttl > 0 {
-		err = keyctl_SetTimeout(ring.id, ttl)
+		if err := keyctl_SetTimeout(ring.id, ttl); err != nil {
+			return nil, err
+		}
 	}
 
 	return ring, nil
@@ -194,12 +196,12 @@ func SetKeyringTTL(kr NamedKeyring, nsecs uint) error {
 	return err
 }
 
-// Link an object to a keyring
+// Link an object to a keyring.
 func Link(parent Keyring, child Id) error {
 	return keyctl_Link(keyId(child.Id()), keyId(parent.Id()))
 }
 
-// Unlink an object from a keyring
+// Unlink an object from a keyring.
 func Unlink(parent Keyring, child Id) error {
 	return keyctl_Unlink(keyId(child.Id()), keyId(parent.Id()))
 }
@@ -209,6 +211,7 @@ func UnlinkKeyring(kr NamedKeyring) error {
 	return keyctl_Unlink(keyId(kr.Id()), kr.(*namedKeyring).parent)
 }
 
+// Move a key from one keyring to another.
 func Move(source Keyring, dest Keyring, child Id, excl bool) error {
 	var flags uint
 	if excl {

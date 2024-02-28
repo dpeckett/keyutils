@@ -182,17 +182,21 @@ func TestMoveKey(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("created keyring %v named %q", nring.Id(), nring.Name())
-	defer UnlinkKeyring(nring)
+	t.Cleanup(func() {
+		if err := UnlinkKeyring(nring); err != nil {
+			t.Fatal(err)
+		}
+	})
 
 	key, err := ring.Add("move-test", []byte("test"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Logf("added test key as: %v\n", key.Id())
-	defer key.Unlink()
 
 	err = Move(ring, nring, key, false)
 	if err != nil {
+		_ = key.Unlink()
 		t.Fatal(err)
 	}
 
@@ -200,8 +204,13 @@ func TestMoveKey(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	t.Logf("found key in keyring: %v\n", movedKey.Id())
 	if movedKey.Id() != key.Id() {
 		t.Fatal("IDs don't match\n")
+	}
+
+	if err := movedKey.Unlink(); err != nil {
+		t.Fatal(err)
 	}
 }

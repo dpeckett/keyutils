@@ -59,8 +59,6 @@ const (
 	keyctlWatchKey
 )
 
-var debugSyscalls bool
-
 func (id keyId) Id() int32 {
 	return int32(id)
 }

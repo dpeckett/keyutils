@@ -41,8 +41,11 @@ func TestStreamWriterUpdate(t *testing.T) {
 	}
 
 	ring, err = CreateKeyring(ring, "test")
-	var key *Key
+	if err != nil {
+		t.Fatal(err)
+	}
 
+	var key *Key
 	for key == nil {
 		key, err = ring.Search("test218bytestream")
 		if err != nil {
@@ -59,7 +62,7 @@ func TestStreamWriterUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = w.(Flusher).Flush(); err != nil {
+	if err = w.Flush(); err != nil {
 		t.Fatal(err)
 	}
 
@@ -87,7 +90,7 @@ func TestStreamWriterFlush(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = w.(Flusher).Flush(); err != nil {
+	if err = w.Flush(); err != nil {
 		t.Fatal(err)
 	}
 
