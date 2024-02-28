@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+//go:build linux
 // +build linux
 
 // A Go interface to linux kernel keyrings (keyctl interface)
@@ -206,4 +207,12 @@ func Unlink(parent Keyring, child Id) error {
 // Unlink a named keyring from its parent.
 func UnlinkKeyring(kr NamedKeyring) error {
 	return keyctl_Unlink(keyId(kr.Id()), kr.(*namedKeyring).parent)
+}
+
+func Move(source Keyring, dest Keyring, child Id, excl bool) error {
+	var flags uint
+	if excl {
+		flags = keyctlMoveExcl
+	}
+	return keyctl_Move(keyId(child.Id()), keyId(source.Id()), keyId(dest.Id()), flags)
 }
