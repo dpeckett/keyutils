@@ -166,6 +166,10 @@ func GlobalKeyring(name string) (NamedKeyring, error) {
 				continue
 			}
 
+			if fields[3] == "expd" {
+				continue
+			}
+
 			keyType := fields[7]
 			if keyType != "keyring" {
 				continue
