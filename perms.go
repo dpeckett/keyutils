@@ -1,4 +1,4 @@
-package keyctl
+package keyutils
 
 // KeyPerm represents in-kernel access control permission to keys and keyrings
 // as a 32-bit integer broken up into four permission sets, one per byte.

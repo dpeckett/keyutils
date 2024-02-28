@@ -1,4 +1,4 @@
-package keyctl
+package keyutils
 
 import (
 	"testing"
@@ -225,4 +225,13 @@ func TestMoveKey(t *testing.T) {
 	if err := movedKey.Unlink(); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestGlobalKeyring(t *testing.T) {
+	ring, err := GlobalKeyring(".machine")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Logf("global keyring: %v\n", ring.Id())
 }

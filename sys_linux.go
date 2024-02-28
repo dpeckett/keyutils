@@ -1,4 +1,4 @@
-package keyctl
+package keyutils
 
 import (
 	"syscall"
@@ -360,4 +360,31 @@ func attachPersistent(id keyId) (*keyring, error) {
 		return nil, errno
 	}
 	return &keyring{id: keyId(r1)}, nil
+}
+
+func requestKey(keyType, description string, destRing keyId) (keyId, error) {
+	var (
+		b1, b2 *byte
+		err    error
+	)
+
+	if b1, err = syscall.BytePtrFromString(keyType); err != nil {
+		return -1, err
+	}
+	if b2, err = syscall.BytePtrFromString(description); err != nil {
+		return -1, err
+	}
+
+	r1, _, errno := syscall.Syscall6(syscall_request_key,
+		uintptr(unsafe.Pointer(b1)),
+		uintptr(unsafe.Pointer(b2)),
+		0,
+		uintptr(destRing),
+		0,
+		0)
+	if errno != 0 {
+		return -1, errno
+	}
+
+	return keyId(r1), nil
 }

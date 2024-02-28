@@ -1,4 +1,4 @@
-package keyctl
+package keyutils
 
 import (
 	"syscall"

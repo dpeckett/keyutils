@@ -3,10 +3,18 @@
 // license that can be found in the LICENSE file.
 
 //go:build linux
-// +build linux
 
 // A Go interface to linux kernel keyrings (keyctl interface)
-package keyctl
+package keyutils
+
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+	"syscall"
+)
 
 // All Keys and Keyrings have unique 32-bit serial number identifiers.
 type Id interface {
@@ -77,6 +85,8 @@ func (kr *keyring) Add(name string, key []byte) (*Key, error) {
 	return kr.AddType(name, "user", key)
 }
 
+// Add a new key to a keyring with a specific key type. The key can be searched
+// for later by name.
 func (kr *keyring) AddType(name string, keyType string, key []byte) (*Key, error) {
 	r, err := add_key(keyType, name, key, int32(kr.id))
 	if err == nil {
@@ -97,6 +107,9 @@ func (kr *keyring) Search(name string) (*Key, error) {
 	return kr.SearchType(name, "user")
 }
 
+// Search for a key by name and type, this also searches child keyrings linked
+// to this one. The key, if found, is linked to the top keyring that SearchType()
+// was called from.
 func (kr *keyring) SearchType(name string, keyType string) (*Key, error) {
 	id, err := searchKeyring(kr.id, name, keyType)
 	if err == nil {
@@ -116,6 +129,7 @@ func UserSessionKeyring() (Keyring, error) {
 	return newKeyring(keySpecUserSessionKeyring)
 }
 
+// Return the current user keyring.
 func UserKeyring() (Keyring, error) {
 	return newKeyring(keySpecUserKeyring)
 }
@@ -133,6 +147,61 @@ func ThreadKeyring() (Keyring, error) {
 // Return the keyring specific to the current executing process.
 func ProcessKeyring() (Keyring, error) {
 	return newKeyring(keySpecProcessKeyring)
+}
+
+// Return a named global keyring.
+func GlobalKeyring(name string) (NamedKeyring, error) {
+	id, err := requestKey("keyring", name, 0)
+	if err != nil || id < 0 {
+		f, err := os.Open("/proc/keys")
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		for scanner.Scan() {
+			fields := strings.Fields(scanner.Text())
+			if len(fields) < 9 {
+				continue
+			}
+
+			keyType := fields[7]
+			if keyType != "keyring" {
+				continue
+			}
+
+			keyDesc := fields[8]
+			if !strings.HasPrefix(keyDesc, name) {
+				continue
+			}
+
+			idInt, err := strconv.ParseInt(fields[0], 16, 32)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing key id: %w", err)
+			}
+
+			id = keyId(idInt)
+		}
+
+		if err := scanner.Err(); err != nil {
+			return nil, fmt.Errorf("error reading /proc/keys: %w", err)
+		}
+	}
+
+	if id < 0 {
+		return nil, fmt.Errorf("key not found: %w", syscall.ENOKEY)
+	}
+
+	keyring, err := newKeyring(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &namedKeyring{
+		keyring: keyring,
+		name:    name,
+	}, nil
 }
 
 // Creates a new named-keyring linked to a parent keyring. The parent may be
