@@ -24,6 +24,7 @@ type Keyring interface {
 	Search(string) (*Key, error)
 	SearchType(string, string) (*Key, error)
 	SetDefaultTimeout(uint)
+	AttachPersistent() (Keyring, error)
 }
 
 // Named keyrings are user-created keyrings linked to a parent keyring. The
@@ -217,5 +218,12 @@ func Move(source Keyring, dest Keyring, child Id, excl bool) error {
 	if excl {
 		flags = keyctlMoveExcl
 	}
-	return keyctl_Move(keyId(child.Id()), keyId(source.Id()), keyId(dest.Id()), flags)
+	return moveKey(keyId(child.Id()), keyId(source.Id()), keyId(dest.Id()), flags)
+}
+
+// AttachPersistent attaches the current executing context's persistent
+// keyring to this keyring. See persistent-keyring(7) for more info.
+// It returns either an error, or the persistent Keyring.
+func (kr *keyring) AttachPersistent() (Keyring, error) {
+	return attachPersistent(kr.id)
 }
