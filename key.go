@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Represents a single key linked to one or more kernel keyrings.
+// Represents a single key optionally linked to one or more kernel keyrings.
 type Key struct {
 	Name string
 
@@ -13,9 +13,14 @@ type Key struct {
 	ttl      time.Duration
 }
 
+// GetKey returns a new Key instance with the specified kernel identifier.
+func GetKey(id keyId) *Key {
+	return &Key{id: id}
+}
+
 func (k *Key) private() {}
 
-// Returns the 32-bit kernel identifier for a specific key
+// Returns the 32-bit kernel identifier for a specific key.
 func (k *Key) Id() int32 {
 	return int32(k.id)
 }
@@ -77,5 +82,9 @@ func (k *Key) Set(b []byte) error {
 // Unlink a key from the keyring it was loaded from (or added to). If the key
 // is not linked to any other keyrings, it is destroyed.
 func (k *Key) Unlink() error {
+	if k.ring < 0 {
+		return nil
+	}
+
 	return keyctl_Unlink(k.id, k.ring)
 }
