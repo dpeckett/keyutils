@@ -14,8 +14,8 @@ type Key struct {
 }
 
 // GetKey returns a new Key instance with the specified kernel identifier.
-func GetKey(id keyId) *Key {
-	return &Key{id: id}
+func GetKey(id int32) *Key {
+	return &Key{id: keyId(id)}
 }
 
 func (k *Key) private() {}
